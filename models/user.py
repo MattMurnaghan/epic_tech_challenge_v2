@@ -3,6 +3,7 @@ from typing import Optional, List
 from pprint import pprint
 import uuid
 
+
 class DbUser(SQLModel, table=True):
     """
     SQLModel class to handle the user data object for both the database.
@@ -20,10 +21,13 @@ class DbUser(SQLModel, table=True):
         username when the object is created
     """
     __tablename__ = "users"
-    id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
+    # proposed change - convert to uuid to ensure unique values for id both databases
+    # id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
+    id: str = Field(primary_key=True)
     username: str = Field(index=True)
     email: str = Field(unique=True)
     username_character_count: int = Field(default=0)
+
 
 class User(SQLModel):
     """
@@ -41,8 +45,9 @@ class User(SQLModel):
         username_character_count is a calculated field that is set to the length of the
         username when the object is created
     """
-
-    id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
+    # proposed change - convert to uuid to ensure unique values for id both databases
+    # id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
+    id: str = Field(primary_key=True)
     username: str = Field(index=True)
     email: str = Field(unique=True)
     username_character_count: int = Field(default=0)
@@ -100,7 +105,7 @@ class UserList:
             for user in self.users
         ]
 
-    def show_users(self, trimmed = False) -> None:
+    def show_users(self, trimmed=False) -> None:
         """
         Print the username and email of each user in the list.
         """
