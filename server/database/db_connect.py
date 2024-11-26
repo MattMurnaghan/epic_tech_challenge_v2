@@ -1,7 +1,9 @@
+from contextlib import contextmanager
 from sqlmodel import SQLModel, Session, create_engine
 from models.user import DbUser
 from dotenv import load_dotenv
-import os, sys
+import os
+import sys
 
 load_dotenv()
 try:
@@ -15,10 +17,14 @@ except Exception as e:
     exit(1)
 
 # Create the database engine
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=os.getenv("POSTGRESS_VERBOSE_LOGS"))
+SQLModel.metadata.create_all(engine)
 
 
 # Dependency to provide a database session
+@contextmanager  # must be added as a decorator to the function
+# tutorial showed this with style of function definition alongside fastapi dependency injection
+# fast api handles the context manager for the session, so here we need to add it manually
 def get_session():
     try:
         with Session(engine) as session:
@@ -28,6 +34,8 @@ def get_session():
         raise e
 
 # Function to initialize the database
+
+
 def init_db():
     """
     Create all tables defined using SQLModel.
@@ -37,7 +45,8 @@ def init_db():
 
 if __name__ == "__main__":
     try:
-        confirm = input("This will initialize the database, are you sure? (y/n): ")
+        confirm = input(
+            "This will initialize the database, are you sure? (y/n): ")
         if confirm.lower() != "y":
             print("Exiting...")
             exit(0)
