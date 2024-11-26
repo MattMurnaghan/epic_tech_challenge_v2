@@ -1,59 +1,34 @@
 import requests
+from pprint import pprint
 
 from client.src.auth.auth import get_jwt_token
-from client.src.utils import load_env_vars, load_urls
+from utils import load_env_vars, load_urls
+from models.user import User, UserList
+
 
 load_env_vars()
-
 urls = load_urls(["BASE_URL", "USERS", "USERS_ID"])
 
 
-def get_user_list() -> dict:
+def get_user_list() -> UserList:
+    """
+    Retrieve user data from the API and parse it into User SQLModel instances.
+    """
     headers = {"Authorization": f"Bearer {get_jwt_token()}"}
     response = requests.get(urls["BASE_URL"] + urls["USERS"], headers=headers)
-    return response.json()
-
-
-def get_users_by_filtered_name(first_char: str = None) -> dict:
-    headers = {"Authorization": f"Bearer {get_jwt_token()}"}
-    response = requests.get(urls["BASE_URL"] + urls["USERS"], headers=headers)
-    user_list = response.json()
-    if first_char is None:
-        return user_list
-    filtered_users = [
-        user for user in user_list if user["username"].startswith(first_char)
-    ]
-    return filtered_users
-
-
-def get_id_user_email_from_user_list(user_list: list) -> list:
-    """
-    Extracts the id and email from a user object in a supplied list of users
-    """
-    for user in user_list:
-        if "id" not in user or "email" not in user or "username" not in user:
-            raise ValueError(
-                "User object malformed - must contain 'id', 'email', and 'username' keys"
-            )
-    return [
-        {"id": user["id"], "email": user["email"], "username": user["username"]}
-        for user in user_list
-    ]
-
-
-def count_username_chars(user: dict) -> None:
-    """
-    Counts the number of characters in the username of a user object
-    """
-    if "username" not in user:
-        raise ValueError("User object malformed - must contain 'username' key")
-    print(f"username {user['username']} contains {len(user['username'])} characters.")
-
+    response.raise_for_status() 
+    api_users = response.json()
+    users = UserList([User(**user_data) for user_data in api_users])
+    return users
 
 if __name__ == "__main__":
-    # retrieve users beginning with the letter "M"
-    first_char = "M"
-    filtered_user_list = get_users_by_filtered_name(first_char=first_char)
-    trimmed_user_list = get_id_user_email_from_user_list(user_list=filtered_user_list)
-    for user in trimmed_user_list:
-        count_username_chars(user)
+    sort_char = "M"
+
+    print("\ngettings users from api:\n")
+    users = get_user_list()
+
+    print('\nfilter users by first letter of username = "M":\n')
+    filtered_users = users.filter_by_username(sort_char).trim_user_info()
+
+    for user in filtered_users:
+        print(f"username {user['username']} contains {len(user['username'])} characters.")
