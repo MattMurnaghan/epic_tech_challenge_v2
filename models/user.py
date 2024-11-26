@@ -3,22 +3,41 @@ from typing import Optional, List
 from pprint import pprint
 import uuid
 
-
-class User(SQLModel, table=True):
+class DbUser(SQLModel, table=True):
     """
-    SQLModel class to handle the user data object for both the database and the API
+    SQLModel class to handle the user data object for both the database.
 
-    API:
-        All fields are handled and stored in memory when ingesting data from the API
+    Database fields are marked for persistence by using the Field class from SQLModel
 
-    Database:
-        Database fields are marked for persistence by using the Field class from SQLModel
-        Fields:
-            id: UUID - Primary key for the user object
-            username: str - Username of the user
-            email: str - Email of the user
-            username_character_count: int - Number of characters in the username
+    Fields:
+        id: UUID - Primary key for the user object
+        username: str - Username of the user
+        email: str - Email of the user
+        username_character_count: int - Number of characters in the username
 
+    Notes:
+        username_character_count is a calculated field that is set to the length of the
+        username when the object is created
+    """
+    __tablename__ = "users"
+    id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
+    username: str = Field(index=True)
+    email: str = Field(unique=True)
+    username_character_count: int = Field(default=0)
+
+class User(SQLModel):
+    """
+    SQLModel class to handle the user data object for the API
+
+    All fields are handled and stored in memory when ingesting data from the API
+
+    Fields:
+        id: UUID - Primary key for the user object
+        username: str - Username of the user
+        email: str - Email of the user
+        username_character_count: int - Number of characters in the username
+
+    Notes:
         username_character_count is a calculated field that is set to the length of the
         username when the object is created
     """
