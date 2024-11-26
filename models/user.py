@@ -23,7 +23,7 @@ class DbUser(SQLModel, table=True):
     __tablename__ = "users"
     # proposed change - convert to uuid to ensure unique values for id both databases
     # id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
-    id: str = Field(primary_key=True)
+    id: int = Field(primary_key=True)
     username: str = Field(index=True)
     email: str = Field(unique=True)
     username_character_count: int = Field(default=0)
@@ -47,7 +47,7 @@ class User(SQLModel):
     """
     # proposed change - convert to uuid to ensure unique values for id both databases
     # id: Optional[uuid.UUID] = Field(default=uuid.uuid4(), primary_key=True)
-    id: str = Field(primary_key=True)
+    id: int = Field(primary_key=True)
     username: str = Field(index=True)
     email: str = Field(unique=True)
     username_character_count: int = Field(default=0)
