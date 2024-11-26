@@ -3,7 +3,8 @@ from pprint import pprint
 
 from client.src.auth.auth import get_jwt_token
 from utils import load_env_vars, load_urls
-from models.user import User, UserList
+from models.user import User, UserList, DbUser
+from server.database.db_connect import get_session
 
 
 load_env_vars()
