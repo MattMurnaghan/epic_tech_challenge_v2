@@ -4,6 +4,7 @@ from client.src.auth.auth import get_jwt_token
 from utils import load_env_vars, load_urls
 from models.user import User, UserList, DbUser
 from server.database.db_connect import get_session
+from sqlmodel import select
 
 
 load_env_vars()
@@ -29,8 +30,10 @@ def add_users_to_db(users: UserList):
     try:
         with get_session() as session:
             for user in users:
-                existing_user = session.query(DbUser).filter(
-                    DbUser.email == user["email"]).first()
+                statement = select(DbUser).filter(
+                    DbUser.email == user["email"])
+                result = session.exec(statement)
+                existing_user = result.first()
                 if existing_user:
                     print(
                         f"User with email {user['email']} already exists. Skipping.")
@@ -43,6 +46,9 @@ def add_users_to_db(users: UserList):
                 )
                 session.add(new_user)
             session.commit()
+            print("\nUsers added:\n")
+            for user in users:
+                print(f"username: {user['username']} \t- id: {user['id']}")
     except Exception as e:
         print(f"Error adding users to the database: {e}")
 
@@ -60,5 +66,5 @@ if __name__ == "__main__":
         print(
             f"username {user['username']} contains {user['username_character_count']} characters.")
 
-    # print("\nAdding filtered users to the database:\n")
-    # add_users_to_db(filtered_users)
+    print("\nAdding filtered users to the database:\n")
+    add_users_to_db(filtered_users)
