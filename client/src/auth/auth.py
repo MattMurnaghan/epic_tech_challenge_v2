@@ -1,7 +1,7 @@
 # retrieve jwt token from the freefakeapi.io
 import requests
 import os
-from client.src.utils import load_env_vars, load_urls
+from utils import load_env_vars, load_urls
 
 # load environment variables - handle errors
 load_env_vars()
@@ -16,8 +16,8 @@ def get_jwt_token():
         "Content-Type": "application/json"
     }
     body = {
-        "username": "MikePayne",
-        "password": "myBeaut1fu11P@ssW0rd!"
+        "username": os.getenv("API_USERNAME"),
+        "password": os.getenv("API_PASSWORD")
     }
 
     response = requests.post(url, headers=headers, json=body)
