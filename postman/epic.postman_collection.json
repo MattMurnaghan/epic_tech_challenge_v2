@@ -1,0 +1,1402 @@
+{
+	"info": {
+		"_postman_id": "e5b602d4-ff01-4854-8365-1fc8baaff2ce",
+		"name": "epic",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29596004"
+	},
+	"item": [
+		{
+			"name": "create testing",
+			"item": [
+				{
+					"name": "create post - valid",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"let res = pm.response.json()",
+									"let req = JSON.parse(pm.request.body.raw)",
+									"",
+									"pm.test(\"Response contains an object\", function () {",
+									"    pm.expect(res).to.be.an.instanceof(Object)",
+									"});",
+									"function compare_fields () {",
+									"    pm.test(\"Request fields match response fields\", function () {",
+									"        pm.expect(res.title).to.eql(req.title),",
+									"        pm.expect(res.content).to.eql(req.content),",
+									"        pm.expect(res.slug).to.eql(req.slug),",
+									"        pm.expect(res.picture).to.eql(req.picture),",
+									"        pm.expect(`/authapi/users/${req.user}`).to.eql(res.user)",
+									"    });",
+									"};",
+									"",
+									"switch (pm.response.code){",
+									"    case 201:",
+									"        pm.test(\"New resource was created\", function () {",
+									"            pm.expect(pm.response.code).to.equal(201);",
+									"        });",
+									"        compare_fields();",
+									"        break;",
+									"",
+									"    default:",
+									"        pm.test(\"Unexpected status code\", function () {",
+									"            pm.expect.fail(`Expected status code 201, got ${pm.response.code}`);",
+									"        });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "//All fields are populated and matching - test valid response\n{\n    \"title\": \"This is the title\",\n    \"content\": \"This is the post content\",\n    \"slug\": \"this-is-the-slug\",\n    \"picture\": \"https://path.to/picture.jpg\",\n    \"user\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create post - invalid",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let invalid_payloads = JSON.parse(pm.collectionVariables.get(\"CREATE_POST_INVALID_PAYLOADS\") || \"[]\");",
+									"",
+									"if (invalid_payloads.length === 0) {",
+									"    console.log(\"Invalid Payloads are empty. Setting default payload...\");",
+									"    invalid_payloads = [",
+									"        {",
+									"            \"title\": \"\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": \"\"",
+									"        }",
+									"    ];",
+									"}",
+									"",
+									"const curr_payload = invalid_payloads.shift();",
+									"",
+									"pm.collectionVariables.set(\"CREATE_POST_INVALID_PAYLOAD\", JSON.stringify(curr_payload));",
+									"pm.collectionVariables.set(\"CREATE_POST_INVALID_PAYLOADS\", JSON.stringify(invalid_payloads));",
+									"",
+									"pm.request.body.raw = JSON.stringify(curr_payload);",
+									"",
+									"console.log(\"Processing invalid payload:\", curr_payload);",
+									"console.log(\"Remaining invalid payloads:\", invalid_payloads.length);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response;",
+									"const contentType = pm.response.headers.get(\"Content-Type\");",
+									"",
+									"try {",
+									"    if (contentType && contentType.includes(\"application/json\")) {",
+									"        response = pm.response.json();",
+									"        console.log(\"Response JSON:\", response);",
+									"    } else {",
+									"        response = pm.response.text();",
+									"        console.log(\"Response Text:\", response);",
+									"    }",
+									"} catch (error) {",
+									"    console.error(\"Error parsing response:\", error.message);",
+									"    pm.test(\"Response should be valid JSON\", function () {",
+									"        pm.expect.fail(\"Response body is not valid JSON.\");",
+									"    });",
+									"    return;",
+									"}",
+									"",
+									"// Test: Ensure the response status code is 400 for invalid payload",
+									"pm.test(\"Response has status code 400 for invalid payload\", function () {",
+									"    pm.expect(pm.response.code).to.equal(400);",
+									"});",
+									"",
+									"// Test: Check for a meaningful error message",
+									"if (typeof response === \"object\" && response !== null) {",
+									"    pm.test(\"Response contains an error message\", function () {",
+									"        pm.expect(response).to.have.property(\"message\").that.is.a(\"string\").and.has.length.greaterThan(0);",
+									"    });",
+									"} else {",
+									"    pm.test(\"Response contains non-empty text message\", function () {",
+									"        pm.expect(response).to.be.a(\"string\");",
+									"        pm.expect(response.length).to.be.greaterThan(0);",
+									"    });",
+									"}",
+									"",
+									"let invalid_payloads = JSON.parse(pm.collectionVariables.get(\"CREATE_POST_INVALID_PAYLOADS\") || \"[]\");",
+									"",
+									"if (invalid_payloads.length > 0) {",
+									"    console.log(`Next invalid payload: ${JSON.stringify(invalid_payloads[0])}`);",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log(\"All invalid payloads processed. No more requests to loop.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "get testing",
+			"item": [
+				{
+					"name": "get all posts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json()",
+									"",
+									"// Test: response should be a list of posts",
+									"pm.test(\"Responds with list of posts\", function () {",
+									"    pm.expect(res).to.be.an('array');",
+									"});",
+									"",
+									"// Test: response should contain all expected fields ",
+									"pm.test(\"Responds with required fields\", function () {",
+									"    res.forEach((post) => {",
+									"        pm.expect(post, 'response does not contain id').to.haveOwnProperty('id');",
+									"        pm.expect(post, 'response does not contain title').to.haveOwnProperty('title');",
+									"        pm.expect(post, 'response does not contain content').to.haveOwnProperty('content');",
+									"        pm.expect(post, 'response does not contain slug').to.haveOwnProperty('slug');",
+									"        pm.expect(post, 'response does not contain picture').to.haveOwnProperty('picture');",
+									"        pm.expect(post, 'response does not contain user').to.haveOwnProperty('user');",
+									"    })",
+									"});",
+									"",
+									"// Test: url for picture should be in valid form",
+									"pm.test(\"Picture field is valid url\", function(){",
+									"    const url_regex = /^(https?:\\/\\/)[^\\s$.?#].[^\\s]*$/;",
+									"    res.forEach(post => {",
+									"        pm.expect(post.picture, 'image url is not valid').to.match(url_regex)",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{AUTH_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{AUTH_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get posts with limits",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"const base_url = pm.collectionVariables.get(\"BASE_URL\");",
+									"const posts = pm.collectionVariables.get(\"POSTS\");",
+									"const curr_limit = pm.collectionVariables.get(\"CURRENT_LIMIT\");",
+									"",
+									"pm.test(\"Responds with list of posts\", function () {",
+									"    pm.expect(res).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Responds with required fields\", function () {",
+									"    res.forEach((post) => {",
+									"        pm.expect(post, 'response does not contain id').to.haveOwnProperty('id');",
+									"        pm.expect(post, 'response does not contain title').to.haveOwnProperty('title');",
+									"        pm.expect(post, 'response does not contain content').to.haveOwnProperty('content');",
+									"        pm.expect(post, 'response does not contain slug').to.haveOwnProperty('slug');",
+									"        pm.expect(post, 'response does not contain picture').to.haveOwnProperty('picture');",
+									"        pm.expect(post, 'response does not contain user').to.haveOwnProperty('user');",
+									"    })",
+									"});",
+									"",
+									"pm.test(\"Picture field is valid url\", function(){",
+									"    const url_regex = /^(https?:\\/\\/)[^\\s$.?#].[^\\s]*$/;",
+									"    res.forEach(post => {",
+									"        pm.expect(post.picture, 'image url is not valid').to.match(url_regex)",
+									"    });",
+									"});",
+									"",
+									"console.log(`Response contains ${res.length} posts.`)",
+									"",
+									"// Test: The current response length should be at most equal to total posts",
+									"pm.test(`Resonds with less than or equal to ${curr_limit} posts`, function(){",
+									"    pm.expect(res.length).to.be.at.most(curr_limit)",
+									"});",
+									"",
+									"console.log(pm.collectionVariables.get(\"AUTH_TOKEN\"))",
+									"pm.sendRequest({",
+									"    url: `${base_url}${posts}`,",
+									"    method: \"GET\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\",",
+									"        \"Authorization\": `Bearer ${pm.collectionVariables.get(\"AUTH_TOKEN\")}`",
+									"    },",
+									"}, function (err, response) {",
+									"    if (err) {",
+									"        console.error(\"Error fetching all posts:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const all_posts = response.json();",
+									"    console.log(all_posts)",
+									"    const total_posts = all_posts.length;",
+									"    console.log(`Total posts available: ${total_posts}`);",
+									"",
+									"    // Test: The current response length should be less than or equal to total posts",
+									"    pm.test(`Current response length (${res.length}) should not exceed total posts (${total_posts})`, function () {",
+									"        pm.expect(res.length).to.be.at.most(total_posts);",
+									"    });",
+									"});",
+									"",
+									"var limits = pm.collectionVariables.get(\"LIMITS\");",
+									"if (limits && limits.length > 0){",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log('All limits requested')",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var limits = pm.collectionVariables.get(\"LIMITS\");",
+									"var curr_limit = pm.collectionVariables.get(\"CURRENT_LIMIT\");",
+									"",
+									"",
+									"if (!limits || limits.length === 0){",
+									"    limits = [10,20,50]",
+									"}",
+									"",
+									"var curr_limit = limits.shift();",
+									"",
+									"pm.collectionVariables.set(\"LIMITS\", limits);",
+									"pm.collectionVariables.set(\"CURRENT_LIMIT\", curr_limit);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{AUTH_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}?limit={{CURRENT_LIMIT}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "{{CURRENT_LIMIT}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get posts by valid id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const curr_id = pm.collectionVariables.get(\"CURRENT_ID\");",
+									"console.log(\"Processed ID:\", curr_id);",
+									"",
+									"// Response JSON",
+									"const response = pm.response.json();",
+									"",
+									"// Test: Ensure the response contains the current ID",
+									"pm.test(\"Response contains ID\", function () {",
+									"    pm.expect(response).to.have.property(\"id\", Number(curr_id));",
+									"});",
+									"",
+									"// Fetch remaining valid IDs",
+									"let valid_ids = JSON.parse(pm.collectionVariables.get(\"VALID_IDS\") || \"[]\");",
+									"",
+									"// Loop logic",
+									"if (valid_ids.length > 0) {",
+									"    const next_id = valid_ids[0]; // Peek at the next ID for logging",
+									"    console.log(\"Next valid ID:\", next_id);",
+									"",
+									"    // Set the next request to itself",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log(\"All valid IDs processed. No more requests to loop.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"async function fetch_valid_ids() {",
+									"    const valid_posts_url = `",
+									"        ${pm.collectionVariables.get(\"BASE_URL\")}",
+									"        ${pm.collectionVariables.get(\"POSTS\")}",
+									"        ?limit=3",
+									"    `.replace(/\\s+/g, '').trim();",
+									"",
+									"    return new Promise((resolve, reject) => {",
+									"        pm.sendRequest({",
+									"            url: valid_posts_url,",
+									"            method: 'GET',",
+									"            header: {",
+									"                \"Authorization\": `Bearer ${pm.collectionVariables.get(\"AUTH_TOKEN\")}`",
+									"            }",
+									"        }, function (err, response) {",
+									"            if (err) {",
+									"                console.error(\"Error fetching valid IDs:\", err);",
+									"                reject(err);",
+									"            } else {",
+									"                const ids = response.json().map(post => post.id);",
+									"                resolve(ids);",
+									"            }",
+									"        });",
+									"    });",
+									"}",
+									"",
+									"(async function () {",
+									"    let valid_ids = JSON.parse(pm.collectionVariables.get(\"VALID_IDS\") || \"[]\");",
+									"",
+									"    if (valid_ids.length === 0) {",
+									"        console.log(\"Valid IDs are empty. Fetching new valid IDs...\");",
+									"        valid_ids = await fetch_valid_ids();",
+									"        pm.collectionVariables.set(\"VALID_IDS\", JSON.stringify(valid_ids));",
+									"    }",
+									"",
+									"    const curr_id = valid_ids.shift();",
+									"    pm.collectionVariables.set(\"CURRENT_ID\", curr_id);",
+									"    pm.collectionVariables.set(\"VALID_IDS\", JSON.stringify(valid_ids));",
+									"",
+									"    console.log(\"Processing valid ID:\", curr_id);",
+									"    console.log(\"Remaining valid IDs:\", valid_ids);",
+									"})();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{AUTH_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{CURRENT_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{CURRENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get posts by invalid id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const contentType = pm.response.headers.get(\"Content-Type\");",
+									"",
+									"// Test: Response should include a Content-Type header",
+									"pm.test(\"Response should have a Content-Type header\", function () {",
+									"    pm.expect(contentType).to.not.be.undefined;",
+									"});",
+									"",
+									"let response;",
+									"if (contentType && contentType.includes(\"application/json\")) {",
+									"    try {",
+									"        response = pm.response.json();",
+									"        console.log(\"Response JSON:\", response);",
+									"    } catch (error) {",
+									"        console.error(\"Failed to parse response as JSON:\", error.message);",
+									"        pm.test(\"Response is invalid JSON\", function () {",
+									"            throw new Error(\"Response was expected to be JSON but failed to parse.\");",
+									"        });",
+									"    }",
+									"} else {",
+									"    response = pm.response.text();",
+									"    console.log(\"Response Text:\", response);",
+									"}",
+									"",
+									"// Test: Status code validation",
+									"pm.test(\"API returns proper error status code\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 404, 422]);",
+									"});",
+									"",
+									"// Test: No sensitive data is exposed",
+									"pm.test(\"Response does not expose sensitive information\", function () {",
+									"    pm.expect(pm.response.text()).to.not.match(/stack trace|exception|error at/i);",
+									"});",
+									"",
+									"// Test: Ensure a message or generic content is present",
+									"if (typeof response === \"object\" && response !== null) {",
+									"    pm.test(\"Response contains an error message in JSON\", function () {",
+									"        pm.expect(response).to.have.property(\"message\");",
+									"        pm.expect(response.message).to.be.a(\"string\");",
+									"        pm.expect(response.message.length).to.be.greaterThan(0);",
+									"    });",
+									"} else {",
+									"    pm.test(\"Response text is non-empty for malformed URL or null\", function () {",
+									"        pm.expect(response).to.be.a(\"string\");",
+									"        pm.expect(response.length).to.be.greaterThan(0);",
+									"    });",
+									"}",
+									"",
+									"let invalid_ids = JSON.parse(pm.collectionVariables.get(\"INVALID_IDS\") || \"{}\");",
+									"let invalid_index = parseInt(pm.collectionVariables.get(\"INVALID_INDEX\") || \"0\");",
+									"",
+									"if (invalid_index < Object.keys(invalid_ids).length) {",
+									"    console.log(`Next invalid ID: ${Object.values(invalid_ids)[invalid_index]}`);",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log(\"All invalid IDs processed. No more requests to loop.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Retrieve the INVALID_IDS object and the current index",
+									"const invalid_ids = JSON.parse(pm.collectionVariables.get(\"INVALID_IDS\") || \"{}\");",
+									"let invalid_index = parseInt(pm.collectionVariables.get(\"INVALID_INDEX\") || \"0\");",
+									"",
+									"// Get the keys of the INVALID_IDS object",
+									"const keys = Object.keys(invalid_ids);",
+									"",
+									"// Check if the INVALID_IDS object is empty",
+									"if (keys.length === 0) {",
+									"    console.error(",
+									"        \"No invalid IDs defined in the INVALID_IDS variable. Please define it as a JSON object in the collection variables, e.g., \" +",
+									"        '{\"string\": \"foo\", \"negative\": -5, \"outside_range\": 9999999999999, \"null\": null}'",
+									"    );",
+									"",
+									"    pm.test(\"Invalid IDs must be defined.\", function () {",
+									"        throw new Error(\"No invalid IDs defined. Update the INVALID_IDS variable in the collection.\");",
+									"    });",
+									"    return;",
+									"}",
+									"",
+									"if (invalid_index >= keys.length) {",
+									"    console.log(\"All invalid IDs processed. Restarting with the first invalid ID.\");",
+									"    invalid_index = 0;",
+									"}",
+									"",
+									"const curr_key = keys[invalid_index];",
+									"const curr_invalid_id = invalid_ids[curr_key];",
+									"",
+									"pm.collectionVariables.set(\"CURRENT_INVALID_ID\", curr_invalid_id);",
+									"pm.collectionVariables.set(\"INVALID_INDEX\", invalid_index + 1);",
+									"",
+									"console.log(`Processing key: ${curr_key}, value: ${curr_invalid_id}`);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{AUTH_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{CURRENT_INVALID_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{CURRENT_INVALID_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "update testing",
+			"item": [
+				{
+					"name": "update post - valid",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let valid_ids = JSON.parse(pm.collectionVariables.get(\"UPDATE_POST_VALID_IDS\") || \"[]\");",
+									"",
+									"if (valid_ids.length === 0) {",
+									"    console.log(\"Valid IDs are empty. Setting default valid IDs...\");",
+									"    valid_ids = [5, 5555];",
+									"}",
+									"",
+									"// Get the current ID to process",
+									"const curr_id = valid_ids.shift();",
+									"",
+									"pm.collectionVariables.set(\"UPDATE_POST_VALID_ID\", curr_id);",
+									"pm.collectionVariables.set(\"UPDATE_POST_VALID_IDS\", JSON.stringify(valid_ids));",
+									"",
+									"console.log(\"Processing valid ID:\", curr_id);",
+									"console.log(\"Remaining valid IDs:\", valid_ids);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let res = pm.response.json();",
+									"let req = JSON.parse(pm.request.body.raw);",
+									"",
+									"console.log(\"Request Payload:\", req);",
+									"console.log(\"Response Object:\", res);",
+									"",
+									"// Test: Ensure the response contains a valid object",
+									"pm.test(\"Response contains a valid object\", function () {",
+									"    pm.expect(res).to.be.an(\"object\");",
+									"});",
+									"",
+									"function compare_fields() {",
+									"    pm.test(\"Request fields match response fields\", function () {",
+									"        pm.expect(res.id).to.eql(req.id);",
+									"        pm.expect(res.title).to.eql(req.title);",
+									"        pm.expect(res.content).to.eql(req.content);",
+									"        pm.expect(res.slug).to.eql(req.slug);",
+									"        pm.expect(res.picture).to.eql(req.picture);",
+									"        pm.expect(res.user).to.eql(`/authapi/users/${req.user}`);",
+									"    });",
+									"}",
+									"",
+									"switch (pm.response.code) {",
+									"    case 200: // Resource updated",
+									"        pm.test(\"Resource exists and was updated\", function () {",
+									"            pm.expect(pm.response.code).to.equal(200);",
+									"        });",
+									"        compare_fields();",
+									"        break;",
+									"",
+									"    case 201: // New resource created",
+									"        pm.test(\"New resource was created\", function () {",
+									"            pm.expect(pm.response.code).to.equal(201);",
+									"        });",
+									"        compare_fields();",
+									"        break;",
+									"",
+									"    default: // Unexpected status code",
+									"        pm.test(\"Unexpected status code\", function () {",
+									"            pm.expect.fail(`Expected status code 200 or 201, got ${pm.response.code}`);",
+									"        });",
+									"}",
+									"",
+									"let valid_ids = JSON.parse(pm.collectionVariables.get(\"UPDATE_POST_VALID_IDS\") || \"[]\");",
+									"",
+									"if (valid_ids.length > 0) {",
+									"    console.log(`Next valid ID: ${valid_ids[0]}`);",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log(\"All valid IDs processed. No more requests to loop.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "//All fields are populated and matching - test valid response\n{\n    \"id\": {{UPDATE_POST_VALID_ID}},\n    \"title\": \"This is the title\",\n    \"content\": \"This is the post content\",\n    \"slug\": \"this-is-the-slug\",\n    \"picture\": \"https://path.to/picture.jpg\",\n    \"user\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{UPDATE_POST_VALID_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{UPDATE_POST_VALID_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update post - invalid",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Fetch invalid payloads or initialize defaults",
+									"let invalid_payloads = JSON.parse(pm.collectionVariables.get(\"UPDATE_POST_INVALID_PAYLOADS\") || \"[]\");",
+									"const test_id = pm.collectionVariables.get(\"UPDATE_POST_VALID_ID\");",
+									"",
+									"if (invalid_payloads.length === 0) {",
+									"    console.log(\"Invalid Payloads are empty. Setting default payload...\");",
+									"    invalid_payloads = [",
+									"        {",
+									"            \"id\": \"\",",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"id\": `${test_id}`,",
+									"            \"title\": \"\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"id\": `${test_id}`,",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"id\": `${test_id}`,",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"id\": `${test_id}`,",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"\",",
+									"            \"user\": 5",
+									"        },",
+									"        {",
+									"            \"id\": `${test_id}`,",
+									"            \"title\": \"This is the title\",",
+									"            \"content\": \"This is the post content\",",
+									"            \"slug\": \"this-is-the-slug\",",
+									"            \"picture\": \"https://path.to/picture.jpg\",",
+									"            \"user\": \"\"",
+									"        }",
+									"    ];",
+									"}",
+									"",
+									"// Shift the first payload for the current request",
+									"const curr_payload = invalid_payloads.shift();",
+									"",
+									"// Update collection variables for the current payload and remaining payloads",
+									"pm.collectionVariables.set(\"UPDATE_POST_INVALID_PAYLOAD\", JSON.stringify(curr_payload));",
+									"pm.collectionVariables.set(\"UPDATE_POST_INVALID_PAYLOADS\", JSON.stringify(invalid_payloads));",
+									"",
+									"// Set the request body to the current payload",
+									"pm.request.body.raw = JSON.stringify(curr_payload);",
+									"",
+									"console.log(\"Processing invalid payload:\", curr_payload);",
+									"console.log(\"Remaining invalid payloads:\", invalid_payloads.length);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let res;",
+									"",
+									"try {",
+									"    res = pm.response.json();",
+									"} catch (error) {",
+									"    console.error(\"Failed to parse response as JSON:\", error.message);",
+									"    pm.test(\"Response should be valid JSON\", function () {",
+									"        pm.expect.fail(\"Response body is not valid JSON.\");",
+									"    });",
+									"    return;",
+									"}",
+									"",
+									"// Test: Validate status code",
+									"pm.test(\"Response has status code 400 for invalid payload\", function () {",
+									"    pm.expect(pm.response.code).to.equal(400);",
+									"});",
+									"",
+									"// Test: Ensure response contains a meaningful error message",
+									"pm.test(\"Response contains a valid error message\", function () {",
+									"    pm.expect(res).to.have.property(\"message\").that.is.a(\"string\").and.has.length.greaterThan(0);",
+									"    console.log(\"Error message:\", res.message);",
+									"});",
+									"",
+									"let invalid_payloads = JSON.parse(pm.collectionVariables.get(\"UPDATE_POST_INVALID_PAYLOADS\") || \"[]\");",
+									"",
+									"if (invalid_payloads.length > 0) {",
+									"    console.log(`Next invalid payload: ${JSON.stringify(invalid_payloads[0])}`);",
+									"    pm.execution.setNextRequest(pm.info.requestName);",
+									"} else {",
+									"    console.log(\"All invalid payloads processed. No more requests to loop.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{UPDATE_POST_VALID_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{UPDATE_POST_VALID_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "delete testing",
+			"item": [
+				{
+					"name": "delete valid id",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"async function fetch_valid_id() {",
+									"    const valid_posts_url = `",
+									"        ${pm.collectionVariables.get(\"BASE_URL\")}",
+									"        ${pm.collectionVariables.get(\"POSTS\")}",
+									"        ?limit=1",
+									"    `.replace(/\\s+/g, '').trim();",
+									"",
+									"    return new Promise((resolve, reject) => {",
+									"        pm.sendRequest({",
+									"            url: valid_posts_url,",
+									"            method: 'GET',",
+									"            header: {",
+									"                \"Authorization\": `Bearer ${pm.collectionVariables.get(\"AUTH_TOKEN\")}`",
+									"            }",
+									"        }, function (err, response) {",
+									"            if (err) {",
+									"                console.error(\"Error fetching valid ID:\", err);",
+									"                reject(err);",
+									"            } else {",
+									"                const ids = response.json().map(post => post.id);",
+									"                if (ids.length === 0) {",
+									"                    console.error(\"No valid IDs returned by the API.\");",
+									"                    reject(new Error(\"No valid IDs available.\"));",
+									"                } else {",
+									"                    resolve(ids[0]);",
+									"                }",
+									"            }",
+									"        });",
+									"    });",
+									"}",
+									"",
+									"(async function () {",
+									"    let valid_id = pm.collectionVariables.get(\"DELETE_VALID_ID\");",
+									"",
+									"    if (!valid_id) {",
+									"        console.log(\"DELETE_VALID_ID is not set. Fetching a single valid ID...\");",
+									"        try {",
+									"            valid_id = await fetch_valid_id();",
+									"            pm.collectionVariables.set(\"DELETE_VALID_ID\", valid_id);",
+									"            console.log(\"Fetched and set DELETE_VALID_ID:\", valid_id);",
+									"        } catch (error) {",
+									"            console.error(\"Failed to fetch a valid ID:\", error.message);",
+									"        }",
+									"    } else {",
+									"        console.log(\"Using existing DELETE_VALID_ID:\", valid_id);",
+									"    }",
+									"})();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const curr_id = pm.collectionVariables.get(\"DELETE_VALID_ID\");",
+									"console.log(\"Processing deletion for ID:\", curr_id);",
+									"",
+									"// Test: Ensure status code is 204",
+									"pm.test(\"Status code is 204 for successful deletion\", function () {",
+									"    pm.expect(pm.response.code).to.equal(204);",
+									"});",
+									"",
+									"// Test: Ensure response body is empty",
+									"pm.test(\"Response body is undefined or empty\", function () {",
+									"    const response = pm.response.text();",
+									"    pm.expect(response).to.be.oneOf([\"\", undefined]);",
+									"});",
+									"",
+									"console.log(`Successfully validated deletion for ID: ${curr_id}`);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{DELETE_VALID_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{DELETE_VALID_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete invalid id",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set DELETE_INVALID_ID if not already defined",
+									"let invalid_id = pm.collectionVariables.get(\"DELETE_INVALID_ID\");",
+									"",
+									"if (!invalid_id) {",
+									"    console.log(\"DELETE_INVALID_ID is not set. Setting a single invalid ID...\");",
+									"    invalid_id = 5555; // Use a non-existent ID",
+									"    pm.collectionVariables.set(\"DELETE_INVALID_ID\", invalid_id);",
+									"    console.log(\"Set DELETE_INVALID_ID:\", invalid_id);",
+									"} else {",
+									"    console.log(\"Using existing DELETE_INVALID_ID:\", invalid_id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const curr_id = pm.collectionVariables.get(\"DELETE_INVALID_ID\");",
+									"console.log(\"Processing deletion for invalid ID:\", curr_id);",
+									"",
+									"let response;",
+									"try {",
+									"    response = pm.response.json();",
+									"    console.log(\"Response JSON:\", response);",
+									"} catch (error) {",
+									"    console.log(\"Response is not JSON. Treating as plain text.\");",
+									"    response = pm.response.text();",
+									"    console.log(\"Response Text:\", response);",
+									"}",
+									"",
+									"// Test: Ensure status code is 404 for non-existent ID",
+									"pm.test(\"Status code is 404 for invalid deletion\", function () {",
+									"    pm.expect(pm.response.code).to.equal(404);",
+									"});",
+									"",
+									"// Test: Ensure the response contains a meaningful error message",
+									"pm.test(\"Response contains a valid error message\", function () {",
+									"    pm.expect(response).to.have.property(\"message\").that.is.a(\"string\").and.has.length.greaterThan(0);",
+									"    console.log(\"Error message:\", response.message);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{POSTS}}/{{DELETE_INVALID_ID}}",
+							"host": [
+								"{{BASE_URL}}{{POSTS}}"
+							],
+							"path": [
+								"{{DELETE_INVALID_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const body = pm.response.json();",
+							"const res = pm.response;",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"     pm.expect(res.code).to.equal(200);",
+							"});",
+							"",
+							"pm.test(\"Response has Token field\", function(){",
+							"    pm.expect(body).to.have.property(\"token\");",
+							"});",
+							"",
+							"pm.test(\"Response is of type string\", function() {",
+							"    pm.expect(body.token).to.be.a(\"String\");",
+							"});",
+							"",
+							"pm.test(\"Token allows post request\", function() {",
+							"    pm.expect(res.headers.get(\"Access-Control-Allow-Methods\")).to.equal(\"POST\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"MikePayne\",\n  \"password\": \"myBeaut1fu11P@ssW0rd!\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://freefakeapi.io/authapi/login",
+					"protocol": "https",
+					"host": [
+						"freefakeapi",
+						"io"
+					],
+					"path": [
+						"authapi",
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "MikePayne",
+							"disabled": true
+						},
+						{
+							"key": "password",
+							"value": "myBeaut1fu11P@ssW0rd!",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{AUTH_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"const base_url = pm.collectionVariables.get(\"BASE_URL\")",
+					"const login = pm.collectionVariables.get(\"LOGIN\")",
+					"const user = pm.collectionVariables.get(\"AUTH_USER\")",
+					"const pass = pm.collectionVariables.get(\"AUTH_PASS\")",
+					"const logging = pm.collectionVariables.get(\"VERBOSE\") === \"true\"",
+					"",
+					"pm.sendRequest({",
+					"    url: `${base_url}${login}`,",
+					"    method: 'POST',",
+					"    header: {",
+					"        \"Content-Type\": \"application/json\",",
+					"    },",
+					"    body:{",
+					"        mode: \"raw\",",
+					"        raw: JSON.stringify({",
+					"            username: user,",
+					"            password: pass,",
+					"        }),",
+					"    },",
+					"}, function (err, response) {",
+					"    if (!err && response.code == 200){",
+					"        const result = response.json();",
+					"        pm.collectionVariables.set(\"AUTH_TOKEN\", result.token);",
+					"        !logging ? null : console.log(\"Token retrieved successfully\");",
+					"    } else {",
+					"        !logging ? null : console.log(\"Failed to fetch the token:\", err || response.text());",
+					"    }",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "AUTH_USER",
+			"value": "MikePayne",
+			"type": "string"
+		},
+		{
+			"key": "AUTH_PASS",
+			"value": "myBeaut1fu11P@ssW0rd!",
+			"type": "string"
+		},
+		{
+			"key": "AUTH_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "BASE_URL",
+			"value": "https://freefakeapi.io/authapi",
+			"type": "string"
+		},
+		{
+			"key": "LOGIN",
+			"value": "/login",
+			"type": "string"
+		},
+		{
+			"key": "POSTS",
+			"value": "/posts",
+			"type": "string"
+		},
+		{
+			"key": "VALID_IDS",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CURRENT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "LIMIT",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "VERBOSE",
+			"value": "false",
+			"type": "string"
+		},
+		{
+			"key": "LIMITS",
+			"value": ""
+		},
+		{
+			"key": "CURRENT_LIMIT",
+			"value": ""
+		},
+		{
+			"key": "CURRENT_INVALID_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "INVALID_INDEX",
+			"value": ""
+		},
+		{
+			"key": "INVALID_IDS",
+			"value": "{\n  \"string\": \"foo\",\n  \"negative\": -1,\n  \"out_of_range\": 99999999,\n  \"null\": null,\n  \"function\": \"function () {return  42}\"\n}",
+			"type": "string"
+		},
+		{
+			"key": "UPDATE_POST_VALID_ID",
+			"value": "5",
+			"type": "string"
+		},
+		{
+			"key": "UPDATE_POST_VALID_IDS",
+			"value": "[5,5555]",
+			"type": "string"
+		},
+		{
+			"key": "UPDATE_POST_INVALID_PAYLOAD",
+			"value": ""
+		},
+		{
+			"key": "UPDATE_POST_INVALID_PAYLOADS",
+			"value": ""
+		},
+		{
+			"key": "CREATE_POST_VALID_ID",
+			"value": ""
+		},
+		{
+			"key": "DELETE_VALID_ID",
+			"value": ""
+		},
+		{
+			"key": "DELETE_INVALID_ID",
+			"value": ""
+		}
+	]
+}
